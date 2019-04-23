@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,7 @@ public abstract class JsonParserFactory {
 
 	/**
 	 * Static factory for the "best" JSON parser available on the classpath. Tries
-	 * Jackson, then Gson, Snake YAML,and then falls back to the {@link BasicJsonParser}.
+	 * Jackson, then Gson, Snake YAML, and then falls back to the {@link BasicJsonParser}.
 	 * @return a {@link JsonParser}
 	 */
 	public static JsonParser getJsonParser() {

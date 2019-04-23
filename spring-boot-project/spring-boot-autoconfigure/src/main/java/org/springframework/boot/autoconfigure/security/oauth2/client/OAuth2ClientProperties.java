@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,8 @@ import org.springframework.util.StringUtils;
  *
  * @author Madhura Bhave
  * @author Phillip Webb
+ * @author Artsiom Yudovin
+ * @author MyeongHyeon Lee
  */
 @ConfigurationProperties(prefix = "spring.security.oauth2.client")
 public class OAuth2ClientProperties {
@@ -60,9 +62,6 @@ public class OAuth2ClientProperties {
 	private void validateRegistration(Registration registration) {
 		if (!StringUtils.hasText(registration.getClientId())) {
 			throw new IllegalStateException("Client id must not be empty.");
-		}
-		if (!StringUtils.hasText(registration.getClientSecret())) {
-			throw new IllegalStateException("Client secret must not be empty.");
 		}
 	}
 
@@ -102,7 +101,7 @@ public class OAuth2ClientProperties {
 		/**
 		 * Redirect URI. May be left blank when using a pre-defined provider.
 		 */
-		private String redirectUriTemplate;
+		private String redirectUri;
 
 		/**
 		 * Authorization scopes. May be left blank when using a pre-defined provider.
@@ -154,12 +153,12 @@ public class OAuth2ClientProperties {
 			this.authorizationGrantType = authorizationGrantType;
 		}
 
-		public String getRedirectUriTemplate() {
-			return this.redirectUriTemplate;
+		public String getRedirectUri() {
+			return this.redirectUri;
 		}
 
-		public void setRedirectUriTemplate(String redirectUriTemplate) {
-			this.redirectUriTemplate = redirectUriTemplate;
+		public void setRedirectUri(String redirectUri) {
+			this.redirectUri = redirectUri;
 		}
 
 		public Set<String> getScope() {
@@ -196,6 +195,11 @@ public class OAuth2ClientProperties {
 		 * User info URI for the provider.
 		 */
 		private String userInfoUri;
+
+		/**
+		 * User info authentication method for the provider.
+		 */
+		private String userInfoAuthenticationMethod;
 
 		/**
 		 * Name of the attribute that will be used to extract the username from the call
@@ -235,6 +239,14 @@ public class OAuth2ClientProperties {
 
 		public void setUserInfoUri(String userInfoUri) {
 			this.userInfoUri = userInfoUri;
+		}
+
+		public String getUserInfoAuthenticationMethod() {
+			return this.userInfoAuthenticationMethod;
+		}
+
+		public void setUserInfoAuthenticationMethod(String userInfoAuthenticationMethod) {
+			this.userInfoAuthenticationMethod = userInfoAuthenticationMethod;
 		}
 
 		public String getUserNameAttribute() {

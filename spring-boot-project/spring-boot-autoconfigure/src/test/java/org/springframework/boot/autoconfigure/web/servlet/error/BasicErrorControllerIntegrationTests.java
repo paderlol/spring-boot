@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -94,15 +94,29 @@ public class BasicErrorControllerIntegrationTests {
 	}
 
 	@Test
+	public void testErrorForMachineClientTraceParamTrue() {
+		errorForMachineClientOnTraceParam("?trace=true", true);
+	}
+
+	@Test
+	public void testErrorForMachineClientTraceParamFalse() {
+		errorForMachineClientOnTraceParam("?trace=false", false);
+	}
+
+	@Test
+	public void testErrorForMachineClientTraceParamAbsent() {
+		errorForMachineClientOnTraceParam("", false);
+	}
+
 	@SuppressWarnings("rawtypes")
-	public void testErrorForMachineClientTraceParamStacktrace() {
+	private void errorForMachineClientOnTraceParam(String path, boolean expectedTrace) {
 		load("--server.error.include-exception=true",
 				"--server.error.include-stacktrace=on-trace-param");
-		ResponseEntity<Map> entity = new TestRestTemplate()
-				.getForEntity(createUrl("?trace=true"), Map.class);
+		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(createUrl(path),
+				Map.class);
 		assertErrorAttributes(entity.getBody(), "500", "Internal Server Error",
 				IllegalStateException.class, "Expected!", "/");
-		assertThat(entity.getBody().containsKey("trace")).isTrue();
+		assertThat(entity.getBody().containsKey("trace")).isEqualTo(expectedTrace);
 	}
 
 	@Test
@@ -244,7 +258,7 @@ public class BasicErrorControllerIntegrationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@MinimalWebConfiguration
 	@ImportAutoConfiguration(FreeMarkerAutoConfiguration.class)
 	public static class TestConfiguration {

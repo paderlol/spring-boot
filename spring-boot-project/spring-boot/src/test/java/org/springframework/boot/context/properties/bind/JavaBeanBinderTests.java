@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,11 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.context.properties.bind.handler.IgnoreErrorsBindHandler;
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
@@ -39,6 +36,7 @@ import org.springframework.boot.convert.Delimiter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
 
 /**
@@ -48,9 +46,6 @@ import static org.assertj.core.api.Assertions.entry;
  * @author Madhura Bhave
  */
 public class JavaBeanBinderTests {
-
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
 
 	private List<ConfigurationPropertySource> sources = new ArrayList<>();
 
@@ -181,10 +176,10 @@ public class JavaBeanBinderTests {
 		source.put("foo.list[0]", "foo-bar");
 		source.put("foo.list[2]", "bar-baz");
 		this.sources.add(source);
-		this.thrown.expect(BindException.class);
-		this.thrown.expectCause(
-				Matchers.instanceOf(UnboundConfigurationPropertiesException.class));
-		this.binder.bind("foo", Bindable.of(ExampleListBean.class));
+		assertThatExceptionOfType(BindException.class)
+				.isThrownBy(
+						() -> this.binder.bind("foo", Bindable.of(ExampleListBean.class)))
+				.withCauseInstanceOf(UnboundConfigurationPropertiesException.class);
 	}
 
 	@Test
@@ -326,9 +321,8 @@ public class JavaBeanBinderTests {
 		MockConfigurationPropertySource source = new MockConfigurationPropertySource();
 		source.put("foo.nested.foo", "bar");
 		this.sources.add(source);
-		this.thrown.expect(BindException.class);
-		this.binder.bind("foo",
-				Bindable.of(ExampleImmutableNestedBeanWithoutSetter.class));
+		assertThatExceptionOfType(BindException.class).isThrownBy(() -> this.binder
+				.bind("foo", Bindable.of(ExampleImmutableNestedBeanWithoutSetter.class)));
 	}
 
 	@Test
@@ -354,13 +348,15 @@ public class JavaBeanBinderTests {
 	}
 
 	@Test
-	public void bindToClassWhenNoDefaultConstructorShouldReturnUnbound() {
+	public void bindToClassWhenNoDefaultConstructorShouldBind() {
 		MockConfigurationPropertySource source = new MockConfigurationPropertySource();
 		source.put("foo.value", "bar");
 		this.sources.add(source);
 		BindResult<ExampleWithNonDefaultConstructor> bean = this.binder.bind("foo",
 				Bindable.of(ExampleWithNonDefaultConstructor.class));
-		assertThat(bean.isBound()).isFalse();
+		assertThat(bean.isBound()).isTrue();
+		ExampleWithNonDefaultConstructor boundBean = bean.get();
+		assertThat(boundBean.getValue()).isEqualTo("bar");
 	}
 
 	@Test
@@ -392,8 +388,8 @@ public class JavaBeanBinderTests {
 	@Test
 	public void bindToClassWhenPropertyCannotBeConvertedShouldThrowException() {
 		this.sources.add(new MockConfigurationPropertySource("foo.int-value", "foo"));
-		this.thrown.expect(BindException.class);
-		this.binder.bind("foo", Bindable.of(ExampleValueBean.class));
+		assertThatExceptionOfType(BindException.class).isThrownBy(
+				() -> this.binder.bind("foo", Bindable.of(ExampleValueBean.class)));
 	}
 
 	@Test

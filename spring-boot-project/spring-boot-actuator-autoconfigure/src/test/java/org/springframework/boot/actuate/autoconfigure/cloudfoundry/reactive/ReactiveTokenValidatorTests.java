@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -111,9 +111,8 @@ public class ReactiveTokenValidatorTests {
 					assertThat(((CloudFoundryAuthorizationException) ex).getReason())
 							.isEqualTo(Reason.INVALID_KEY_ID);
 				}).verify();
-		Object cachedTokenKeys = ReflectionTestUtils.getField(this.tokenValidator,
-				"cachedTokenKeys");
-		assertThat(cachedTokenKeys).isEqualTo(VALID_KEYS);
+		assertThat(this.tokenValidator).hasFieldOrPropertyWithValue("cachedTokenKeys",
+				VALID_KEYS);
 		fetchTokenKeys.assertWasSubscribed();
 	}
 
@@ -133,9 +132,8 @@ public class ReactiveTokenValidatorTests {
 				.create(this.tokenValidator.validate(
 						new Token(getSignedToken(header.getBytes(), claims.getBytes()))))
 				.verifyComplete();
-		Object cachedTokenKeys = ReflectionTestUtils.getField(this.tokenValidator,
-				"cachedTokenKeys");
-		assertThat(cachedTokenKeys).isEqualTo(VALID_KEYS);
+		assertThat(this.tokenValidator).hasFieldOrPropertyWithValue("cachedTokenKeys",
+				VALID_KEYS);
 		fetchTokenKeys.assertWasSubscribed();
 	}
 
@@ -152,9 +150,8 @@ public class ReactiveTokenValidatorTests {
 				.create(this.tokenValidator.validate(
 						new Token(getSignedToken(header.getBytes(), claims.getBytes()))))
 				.verifyComplete();
-		Object cachedTokenKeys = ReflectionTestUtils.getField(this.tokenValidator,
-				"cachedTokenKeys");
-		assertThat(cachedTokenKeys).isEqualTo(VALID_KEYS);
+		assertThat(this.tokenValidator).hasFieldOrPropertyWithValue("cachedTokenKeys",
+				VALID_KEYS);
 		fetchTokenKeys.assertWasSubscribed();
 	}
 
@@ -177,9 +174,8 @@ public class ReactiveTokenValidatorTests {
 					assertThat(((CloudFoundryAuthorizationException) ex).getReason())
 							.isEqualTo(Reason.INVALID_KEY_ID);
 				}).verify();
-		Object cachedTokenKeys = ReflectionTestUtils.getField(this.tokenValidator,
-				"cachedTokenKeys");
-		assertThat(cachedTokenKeys).isEqualTo(VALID_KEYS);
+		assertThat(this.tokenValidator).hasFieldOrPropertyWithValue("cachedTokenKeys",
+				VALID_KEYS);
 		fetchTokenKeys.assertWasSubscribed();
 	}
 
@@ -259,7 +255,7 @@ public class ReactiveTokenValidatorTests {
 	public void validateTokenWhenIssuerIsNotValidShouldThrowException() throws Exception {
 		given(this.securityService.fetchTokenKeys()).willReturn(Mono.just(VALID_KEYS));
 		given(this.securityService.getUaaUrl())
-				.willReturn(Mono.just("http://other-uaa.com"));
+				.willReturn(Mono.just("https://other-uaa.com"));
 		String header = "{ \"alg\": \"RS256\",  \"kid\": \"valid-key\", \"typ\": \"JWT\", \"scope\": [\"actuator.read\"]}";
 		String claims = "{ \"exp\": 2147483647, \"iss\": \"http://localhost:8080/uaa/oauth/token\", \"scope\": [\"foo.bar\"]}";
 		StepVerifier

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -140,6 +140,22 @@ public class ConditionalOnEnabledEndpointTests {
 				});
 	}
 
+	@Test
+	public void outcomeWhenEndpointEnabledPropertyIsTrueAndMixedCaseShouldMatch() {
+		this.contextRunner.withPropertyValues("management.endpoint.foo-bar.enabled=true")
+				.withUserConfiguration(
+						FooBarEndpointEnabledByDefaultFalseConfiguration.class)
+				.run((context) -> assertThat(context).hasBean("fooBar"));
+	}
+
+	@Test
+	public void outcomeWhenEndpointEnabledPropertyIsFalseOnClassShouldNotMatch() {
+		this.contextRunner.withPropertyValues("management.endpoint.foo.enabled=false")
+				.withUserConfiguration(
+						FooEndpointEnabledByDefaultTrueOnConfigurationConfiguration.class)
+				.run((context) -> assertThat(context).doesNotHaveBean("foo"));
+	}
+
 	@Endpoint(id = "foo", enableByDefault = true)
 	static class FooEndpointEnabledByDefaultTrue {
 
@@ -150,12 +166,19 @@ public class ConditionalOnEnabledEndpointTests {
 
 	}
 
-	@EndpointExtension(endpoint = FooEndpointEnabledByDefaultTrue.class, filter = TestFilter.class)
+	@Endpoint(id = "fooBar", enableByDefault = false)
+	static class FooBarEndpointEnabledByDefaultFalse {
+
+	}
+
+	@EndpointExtension(endpoint = FooEndpointEnabledByDefaultTrue.class,
+			filter = TestFilter.class)
 	static class FooEndpointExtensionEnabledByDefaultTrue {
 
 	}
 
-	@EndpointExtension(endpoint = FooEndpointEnabledByDefaultFalse.class, filter = TestFilter.class)
+	@EndpointExtension(endpoint = FooEndpointEnabledByDefaultFalse.class,
+			filter = TestFilter.class)
 	static class FooEndpointExtensionEnabledByDefaultFalse {
 
 	}
@@ -169,7 +192,7 @@ public class ConditionalOnEnabledEndpointTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class FooEndpointEnabledByDefaultTrueConfiguration {
 
 		@Bean
@@ -180,7 +203,18 @@ public class ConditionalOnEnabledEndpointTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnEnabledEndpoint(endpoint = FooEndpointEnabledByDefaultTrue.class)
+	static class FooEndpointEnabledByDefaultTrueOnConfigurationConfiguration {
+
+		@Bean
+		public FooEndpointEnabledByDefaultTrue foo() {
+			return new FooEndpointEnabledByDefaultTrue();
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
 	static class FooEndpointEnabledByDefaultFalseConfiguration {
 
 		@Bean
@@ -191,7 +225,18 @@ public class ConditionalOnEnabledEndpointTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
+	static class FooBarEndpointEnabledByDefaultFalseConfiguration {
+
+		@Bean
+		@ConditionalOnEnabledEndpoint
+		public FooBarEndpointEnabledByDefaultFalse fooBar() {
+			return new FooBarEndpointEnabledByDefaultFalse();
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
 	static class FooEndpointAndExtensionEnabledByDefaultTrueConfiguration {
 
 		@Bean
@@ -208,7 +253,7 @@ public class ConditionalOnEnabledEndpointTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class FooEndpointAndExtensionEnabledByDefaultFalseConfiguration {
 
 		@Bean
@@ -225,7 +270,7 @@ public class ConditionalOnEnabledEndpointTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class ComponentEnabledIfEndpointIsEnabledConfiguration {
 
 		@Bean
@@ -236,7 +281,7 @@ public class ConditionalOnEnabledEndpointTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class ComponentWithNoEndpointReferenceConfiguration {
 
 		@Bean

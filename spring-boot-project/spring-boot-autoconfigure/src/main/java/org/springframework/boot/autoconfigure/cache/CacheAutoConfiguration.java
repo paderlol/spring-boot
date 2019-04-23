@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,11 @@
 
 package org.springframework.boot.autoconfigure.cache;
 
-import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration.CacheConfigurationImportSelector;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -55,22 +54,22 @@ import org.springframework.util.Assert;
  * @since 1.3.0
  * @see EnableCaching
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(CacheManager.class)
 @ConditionalOnBean(CacheAspectSupport.class)
 @ConditionalOnMissingBean(value = CacheManager.class, name = "cacheResolver")
 @EnableConfigurationProperties(CacheProperties.class)
-@AutoConfigureBefore(HibernateJpaAutoConfiguration.class)
 @AutoConfigureAfter({ CouchbaseAutoConfiguration.class, HazelcastAutoConfiguration.class,
-		RedisAutoConfiguration.class })
+		HibernateJpaAutoConfiguration.class, RedisAutoConfiguration.class })
 @Import(CacheConfigurationImportSelector.class)
 public class CacheAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
 	public CacheManagerCustomizers cacheManagerCustomizers(
-			ObjectProvider<List<CacheManagerCustomizer<?>>> customizers) {
-		return new CacheManagerCustomizers(customizers.getIfAvailable());
+			ObjectProvider<CacheManagerCustomizer<?>> customizers) {
+		return new CacheManagerCustomizers(
+				customizers.orderedStream().collect(Collectors.toList()));
 	}
 
 	@Bean
@@ -79,7 +78,7 @@ public class CacheAutoConfiguration {
 		return new CacheManagerValidator(cacheProperties, cacheManager);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(LocalContainerEntityManagerFactoryBean.class)
 	@ConditionalOnBean(AbstractEntityManagerFactoryBean.class)
 	protected static class CacheManagerJpaDependencyConfiguration

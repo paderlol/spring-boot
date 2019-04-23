@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import reactor.netty.ChannelBindException;
 import reactor.netty.DisposableServer;
-import reactor.netty.http.HttpResources;
 import reactor.netty.http.server.HttpServer;
 
 import org.springframework.boot.web.server.PortInUseException;
@@ -75,7 +74,7 @@ public class NettyWebServer implements WebServer {
 				}
 				throw new WebServerException("Unable to start Netty", ex);
 			}
-			NettyWebServer.logger.info("Netty started on port(s): " + getPort());
+			logger.info("Netty started on port(s): " + getPort());
 			startDaemonAwaitThread(this.disposableServer);
 		}
 	}
@@ -122,8 +121,6 @@ public class NettyWebServer implements WebServer {
 			else {
 				this.disposableServer.disposeNow();
 			}
-			// temporary fix for gh-9146
-			HttpResources.shutdown();
 			this.disposableServer = null;
 		}
 	}

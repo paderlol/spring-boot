@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -123,8 +123,7 @@ public class ConditionsReportEndpoint {
 			this.negativeMatches = new LinkedHashMap<>();
 			this.exclusions = report.getExclusions();
 			this.unconditionalClasses = report.getUnconditionalClasses();
-			report.getConditionAndOutcomesBySource().forEach(
-					(source, conditionAndOutcomes) -> add(source, conditionAndOutcomes));
+			report.getConditionAndOutcomesBySource().forEach(this::add);
 			this.parentId = (context.getParent() != null) ? context.getParent().getId()
 					: null;
 		}

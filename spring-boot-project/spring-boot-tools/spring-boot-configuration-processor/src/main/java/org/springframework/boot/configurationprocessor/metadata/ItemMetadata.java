@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,14 +58,17 @@ public final class ItemMetadata implements Comparable<ItemMetadata> {
 	}
 
 	private String buildName(String prefix, String name) {
-		while (prefix != null && prefix.endsWith(".")) {
-			prefix = prefix.substring(0, prefix.length() - 1);
-		}
-		StringBuilder fullName = new StringBuilder((prefix != null) ? prefix : "");
-		if (fullName.length() > 0 && name != null) {
-			fullName.append('.');
+		StringBuilder fullName = new StringBuilder();
+		if (prefix != null) {
+			if (prefix.endsWith(".")) {
+				prefix = prefix.substring(0, prefix.length() - 1);
+			}
+			fullName.append(prefix);
 		}
 		if (name != null) {
+			if (fullName.length() > 0) {
+				fullName.append('.');
+			}
 			fullName.append(ConfigurationMetadata.toDashedCase(name));
 		}
 		return fullName.toString();

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -117,6 +117,20 @@ public class ConfigFileApplicationListenerYamlProfileNegationTests {
 	}
 
 	@Test
+	public void yamlProfileCascadingMultipleActiveProfilesViaPropertiesShouldPreserveOrder() {
+		SpringApplication application = new SpringApplication(Config.class);
+		application.setWebApplicationType(WebApplicationType.NONE);
+		String configName = "--spring.config.name=cascadingprofiles";
+		this.context = application.run(configName, "--spring.profiles.active=A,B");
+		assertVersionProperty(this.context, "D", "A", "C", "E", "B", "D");
+		assertThat(this.context.getEnvironment().getProperty("not-a")).isNull();
+		assertThat(this.context.getEnvironment().getProperty("not-b")).isNull();
+		assertThat(this.context.getEnvironment().getProperty("not-c")).isNull();
+		assertThat(this.context.getEnvironment().getProperty("not-d")).isNull();
+		assertThat(this.context.getEnvironment().getProperty("not-e")).isNull();
+	}
+
+	@Test
 	public void yamlProfileCascadingOverrideProfilesB() {
 		SpringApplication application = new SpringApplication(Config.class);
 		application.setWebApplicationType(WebApplicationType.NONE);
@@ -138,7 +152,7 @@ public class ConfigFileApplicationListenerYamlProfileNegationTests {
 				.isEqualTo(expectedVersion);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class Config {
 
 	}

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.boot.testsupport.web.servlet;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -114,9 +115,7 @@ public abstract class MockServletWebServer {
 
 	public Servlet[] getServlets() {
 		Servlet[] servlets = new Servlet[this.registeredServlets.size()];
-		for (int i = 0; i < servlets.length; i++) {
-			servlets[i] = this.registeredServlets.get(i).getServlet();
-		}
+		Arrays.setAll(servlets, (i) -> this.registeredServlets.get(i).getServlet());
 		return servlets;
 	}
 

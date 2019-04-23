@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClients;
 import org.junit.Test;
 
 import org.springframework.beans.factory.BeanCreationException;
@@ -39,7 +40,10 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -129,6 +133,17 @@ public class MongoDataAutoConfigurationTests {
 	}
 
 	@Test
+	public void customAutoIndexCreation() {
+		this.contextRunner
+				.withPropertyValues("spring.data.mongodb.autoIndexCreation:false")
+				.run((context) -> {
+					MongoMappingContext mappingContext = context
+							.getBean(MongoMappingContext.class);
+					assertThat(mappingContext.isAutoIndexCreation()).isFalse();
+				});
+	}
+
+	@Test
 	public void interfaceFieldNamingStrategy() {
 		this.contextRunner
 				.withPropertyValues("spring.data.mongodb.field-naming-strategy:"
@@ -173,6 +188,23 @@ public class MongoDataAutoConfigurationTests {
 				.doesNotHaveBean(MongoDataAutoConfiguration.class));
 	}
 
+	@Test
+	public void createsMongoDbFactoryForPreferredMongoClient() {
+		this.contextRunner.run((context) -> {
+			MongoDbFactory dbFactory = context.getBean(MongoDbFactory.class);
+			assertThat(dbFactory).isInstanceOf(SimpleMongoDbFactory.class);
+		});
+	}
+
+	@Test
+	public void createsMongoDbFactoryForFallbackMongoClient() {
+		this.contextRunner.withUserConfiguration(FallbackMongoClientConfiguration.class)
+				.run((context) -> {
+					MongoDbFactory dbFactory = context.getBean(MongoDbFactory.class);
+					assertThat(dbFactory).isInstanceOf(SimpleMongoClientDbFactory.class);
+				});
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static void assertDomainTypesDiscovered(MongoMappingContext mappingContext,
 			Class<?>... types) {
@@ -181,7 +213,7 @@ public class MongoDataAutoConfigurationTests {
 		assertThat(initialEntitySet).containsOnly(types);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomConversionsConfig {
 
 		@Bean
@@ -191,9 +223,19 @@ public class MongoDataAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EntityScan("org.springframework.boot.autoconfigure.data.mongo")
 	static class EntityScanConfig {
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class FallbackMongoClientConfiguration {
+
+		@Bean
+		com.mongodb.client.MongoClient fallbackMongoClient() {
+			return MongoClients.create();
+		}
 
 	}
 

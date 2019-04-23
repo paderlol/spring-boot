@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -159,8 +159,8 @@ public class RedisAutoConfigurationTests {
 					LettuceConnectionFactory cf = context
 							.getBean(LettuceConnectionFactory.class);
 					assertThat(cf.getHostName()).isEqualTo("foo");
-					GenericObjectPoolConfig poolConfig = getPoolingClientConfiguration(cf)
-							.getPoolConfig();
+					GenericObjectPoolConfig<?> poolConfig = getPoolingClientConfiguration(
+							cf).getPoolConfig();
 					assertThat(poolConfig.getMinIdle()).isEqualTo(1);
 					assertThat(poolConfig.getMaxIdle()).isEqualTo(4);
 					assertThat(poolConfig.getMaxTotal()).isEqualTo(16);
@@ -256,7 +256,7 @@ public class RedisAutoConfigurationTests {
 						context.getBean(LettuceConnectionFactory.class).getPassword())
 								.isEqualTo("password")
 
-		);
+				);
 	}
 
 	private LettucePoolingClientConfiguration getPoolingClientConfiguration(
@@ -265,7 +265,7 @@ public class RedisAutoConfigurationTests {
 				"clientConfiguration");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomConfiguration {
 
 		@Bean

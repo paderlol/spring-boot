@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.boot.autoconfigure.web.embedded;
 
 import java.time.Duration;
+import java.util.Arrays;
 
 import org.eclipse.jetty.server.AbstractConnector;
 import org.eclipse.jetty.server.ConnectionFactory;
@@ -36,6 +37,8 @@ import org.springframework.boot.web.embedded.jetty.JettyServerCustomizer;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.unit.DataSize;
 
 /**
  * Customization for Jetty-specific features common for both Servlet and Reactive servers.
@@ -66,17 +69,18 @@ public class JettyWebServerFactoryCustomizer implements
 	public void customize(ConfigurableJettyWebServerFactory factory) {
 		ServerProperties properties = this.serverProperties;
 		ServerProperties.Jetty jettyProperties = properties.getJetty();
-		factory.setUseForwardHeaders(
-				getOrDeduceUseForwardHeaders(properties, this.environment));
+		factory.setUseForwardHeaders(getOrDeduceUseForwardHeaders());
 		PropertyMapper propertyMapper = PropertyMapper.get();
 		propertyMapper.from(jettyProperties::getAcceptors).whenNonNull()
 				.to(factory::setAcceptors);
 		propertyMapper.from(jettyProperties::getSelectors).whenNonNull()
 				.to(factory::setSelectors);
-		propertyMapper.from(properties::getMaxHttpHeaderSize).when(this::isPositive)
-				.to((maxHttpHeaderSize) -> customizeMaxHttpHeaderSize(factory,
-						maxHttpHeaderSize));
-		propertyMapper.from(jettyProperties::getMaxHttpPostSize).when(this::isPositive)
+		propertyMapper.from(properties::getMaxHttpHeaderSize).whenNonNull()
+				.asInt(DataSize::toBytes).when(this::isPositive)
+				.to((maxHttpHeaderSize) -> factory.addServerCustomizers(
+						new MaxHttpHeaderSizeCustomizer(maxHttpHeaderSize)));
+		propertyMapper.from(jettyProperties::getMaxHttpPostSize).asInt(DataSize::toBytes)
+				.when(this::isPositive)
 				.to((maxHttpPostSize) -> customizeMaxHttpPostSize(factory,
 						maxHttpPostSize));
 		propertyMapper.from(properties::getConnectionTimeout).whenNonNull()
@@ -91,13 +95,14 @@ public class JettyWebServerFactoryCustomizer implements
 		return value > 0;
 	}
 
-	private boolean getOrDeduceUseForwardHeaders(ServerProperties serverProperties,
-			Environment environment) {
-		if (serverProperties.isUseForwardHeaders() != null) {
-			return serverProperties.isUseForwardHeaders();
+	private boolean getOrDeduceUseForwardHeaders() {
+		if (this.serverProperties.getForwardHeadersStrategy()
+				.equals(ServerProperties.ForwardHeadersStrategy.NONE)) {
+			CloudPlatform platform = CloudPlatform.getActive(this.environment);
+			return platform != null && platform.isUsingForwardHeaders();
 		}
-		CloudPlatform platform = CloudPlatform.getActive(environment);
-		return platform != null && platform.isUsingForwardHeaders();
+		return this.serverProperties.getForwardHeadersStrategy()
+				.equals(ServerProperties.ForwardHeadersStrategy.NATIVE);
 	}
 
 	private void customizeConnectionTimeout(ConfigurableJettyWebServerFactory factory,
@@ -109,33 +114,6 @@ public class JettyWebServerFactoryCustomizer implements
 							.setIdleTimeout(connectionTimeout.toMillis());
 				}
 			}
-		});
-	}
-
-	private void customizeMaxHttpHeaderSize(ConfigurableJettyWebServerFactory factory,
-			int maxHttpHeaderSize) {
-		factory.addServerCustomizers(new JettyServerCustomizer() {
-
-			@Override
-			public void customize(Server server) {
-				for (org.eclipse.jetty.server.Connector connector : server
-						.getConnectors()) {
-					for (ConnectionFactory connectionFactory : connector
-							.getConnectionFactories()) {
-						if (connectionFactory instanceof HttpConfiguration.ConnectionFactory) {
-							customize(
-									(HttpConfiguration.ConnectionFactory) connectionFactory);
-						}
-					}
-				}
-			}
-
-			private void customize(HttpConfiguration.ConnectionFactory factory) {
-				HttpConfiguration configuration = factory.getHttpConfiguration();
-				configuration.setRequestHeaderSize(maxHttpHeaderSize);
-				configuration.setResponseHeaderSize(maxHttpHeaderSize);
-			}
-
 		});
 	}
 
@@ -193,8 +171,38 @@ public class JettyWebServerFactoryCustomizer implements
 			log.setLogCookies(properties.isLogCookies());
 			log.setLogServer(properties.isLogServer());
 			log.setLogLatency(properties.isLogLatency());
+			log.setPreferProxiedForAddress(properties.isPreferProxiedForAddress());
+			if (!CollectionUtils.isEmpty(properties.getIgnorePaths())) {
+				log.setIgnorePaths(properties.getIgnorePaths().toArray(new String[0]));
+			}
 			server.setRequestLog(log);
 		});
+	}
+
+	private static class MaxHttpHeaderSizeCustomizer implements JettyServerCustomizer {
+
+		private final int maxHttpHeaderSize;
+
+		MaxHttpHeaderSizeCustomizer(int maxHttpHeaderSize) {
+			this.maxHttpHeaderSize = maxHttpHeaderSize;
+		}
+
+		@Override
+		public void customize(Server server) {
+			Arrays.stream(server.getConnectors()).forEach(this::customize);
+		}
+
+		private void customize(org.eclipse.jetty.server.Connector connector) {
+			connector.getConnectionFactories().forEach(this::customize);
+		}
+
+		private void customize(ConnectionFactory factory) {
+			if (factory instanceof HttpConfiguration.ConnectionFactory) {
+				((HttpConfiguration.ConnectionFactory) factory).getHttpConfiguration()
+						.setRequestHeaderSize(this.maxHttpHeaderSize);
+			}
+		}
+
 	}
 
 }

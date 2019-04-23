@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -502,13 +502,12 @@ public class WebServiceTemplateBuilder {
 		configureMessageSenders(webServiceTemplate);
 		PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
 		applyCustomizers(webServiceTemplate, this.internalCustomizers);
-		map.from(() -> this.marshaller).to(webServiceTemplate::setMarshaller);
-		map.from(() -> this.unmarshaller).to(webServiceTemplate::setUnmarshaller);
-		map.from(() -> this.destinationProvider)
-				.to(webServiceTemplate::setDestinationProvider);
-		map.from(() -> this.transformerFactoryClass)
+		map.from(this.marshaller).to(webServiceTemplate::setMarshaller);
+		map.from(this.unmarshaller).to(webServiceTemplate::setUnmarshaller);
+		map.from(this.destinationProvider).to(webServiceTemplate::setDestinationProvider);
+		map.from(this.transformerFactoryClass)
 				.to(webServiceTemplate::setTransformerFactoryClass);
-		map.from(() -> this.messageFactory).to(webServiceTemplate::setMessageFactory);
+		map.from(this.messageFactory).to(webServiceTemplate::setMessageFactory);
 		if (!CollectionUtils.isEmpty(this.interceptors)) {
 			Set<ClientInterceptor> merged = new LinkedHashSet<>(this.interceptors);
 			if (webServiceTemplate.getInterceptors() != null) {
